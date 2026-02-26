@@ -95,21 +95,35 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Save lead (minimal to avoid schema mismatch)
-    try {
-      const { error: leadErr } = await supabaseAdmin.from("leads").upsert(
-        {
-          email: String(email).trim().toLowerCase(),
-          last_seen_at: new Date().toISOString(),
-          source: "prompta-flow",
-        },
-        { onConflict: "email" }
-      );
+    // ✅ Save/Update lead in Supabase (V1 schema)
+try {
+  const payload = {
+    email: String(email).trim().toLowerCase(),
 
-      if (leadErr) console.log("Supabase lead save error:", leadErr.message);
-    } catch (err: any) {
-      console.log("Supabase lead save exception:", err?.message || err);
-    }
+    service: String(service).trim(),
+    problem: String(problem).trim(),
+    result: String(result).trim(),
+
+    audience: String(audience).trim(),
+    audience_stage: audienceStage ?? null,
+    price_range: priceRange ?? null,
+
+    post_type: postType ?? null,
+    topic: topic?.trim() ? topic.trim() : null,
+    tone: tone ?? null,
+
+    source: "prompta-flow",
+    last_seen_at: new Date().toISOString(),
+  };
+
+  const { error: leadErr } = await supabaseAdmin
+    .from("leads")
+    .upsert(payload, { onConflict: "email" });
+
+  if (leadErr) console.log("Supabase lead save error:", leadErr.message);
+} catch (err: any) {
+  console.log("Supabase lead save exception:", err?.message || err);
+}
 
     const openai = new OpenAI({
   apiKey,
