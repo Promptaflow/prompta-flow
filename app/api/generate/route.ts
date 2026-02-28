@@ -181,7 +181,9 @@ Never aggressive.
 Never hype.
 
 FORMAT STRICTLY:
-
+- The POST must be formatted with line breaks.
+- Use 1 empty line between paragraphs.
+- The first line is the hook. It must be a single sentence on its own line.
 POST:
 <post>
 
