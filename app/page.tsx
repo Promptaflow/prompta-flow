@@ -187,7 +187,7 @@ export default function Page() {
         <div className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 p-6">
           <div className="flex flex-col gap-2">
             <div className="text-xs font-semibold tracking-wide text-slate-500">
-              PROMPTA FLOW — V1
+              PROMPTA FLOW 
             </div>
             <h1 className="text-2xl font-semibold text-slate-900">
               LinkedIn Authority Execution System
@@ -330,10 +330,10 @@ export default function Page() {
               disabled={loading}
               className="rounded-xl px-4 py-2 font-semibold text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-60"
             >
-              Regenerate
+              New Angle
             </button>
 
-            <div className="text-xs text-slate-500">Free + Email required (V1)</div>
+            
           </div>
 
           {errorMsg ? (
@@ -346,16 +346,6 @@ export default function Page() {
             <div className="mt-8 grid gap-4">
               <Section title="✅ LinkedIn Post (Copy-Paste Ready)" text={resultData.post} pre />
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <div className="text-sm font-semibold text-slate-900 mb-2">
-                  🔥 3 Hook Options
-                </div>
-                <ul className="list-disc pl-5 text-slate-700 space-y-1">
-                  {(resultData.hooks || []).map((h, idx) => (
-                    <li key={idx}>{h}</li>
-                  ))}
-                </ul>
-              </div>
 
               <Section
                 title="🧠 Why this builds authority"
@@ -385,7 +375,7 @@ export default function Page() {
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4">
             <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-lg">
               <div className="text-lg font-semibold text-slate-900">
-                Enter your email to generate
+                Get your post and save your workspace
               </div>
               <p className="mt-1 text-sm text-slate-600">
                 We use your email only to generate and improve the system.
