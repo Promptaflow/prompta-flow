@@ -182,7 +182,6 @@ Never hype.
 
 FORMAT STRICTLY:
 - The POST must be formatted with line breaks.
-- Use 1 empty line between paragraphs.
 - The first line is the hook. It must be a single sentence on its own line.
 POST:
 <post>
@@ -301,29 +300,42 @@ async function withRetry<T>(fn: () => Promise<T>, tries = 3) {
   })
 );
 
-    const text = response.output_text || "";
+    const text = (response.output_text || "").trim();
 
-    // ✅ Parse strict format: POST + WHY
-    const postMatch = text.match(/POST:\s*([\s\S]*?)\n\s*WHY THIS BUILDS AUTHORITY:/i);
-    const whyMatch = text.match(/WHY THIS BUILDS AUTHORITY:\s*([\s\S]*)$/i);
+const marker = "WHY THIS BUILDS AUTHORITY:";
+const markerIdx = text.toUpperCase().indexOf(marker);
 
-    const post = (postMatch?.[1] || "").trim();
-    const whyRaw = (whyMatch?.[1] || "").trim();
+// ✅ Split مرة وحدة فقط
+let postPart = text;
+let whyPart = "";
 
-    const why = whyRaw
-      .split("\n")
-      .map((l) => l.replace(/^\s*-\s*/, "").trim())
-      .filter(Boolean)
-      .slice(0, 3);
+if (markerIdx !== -1) {
+  postPart = text.slice(0, markerIdx).trim();
+  whyPart = text.slice(markerIdx + marker.length).trim();
+}
 
-    if (!post) {
-      return NextResponse.json({
-        post: text.trim(),
-        why: [],
-      });
-    }
+// ✅ Clean post: حيد أي تكرار ديال العنوان داخل البوست
+postPart = postPart.replace(/WHY THIS BUILDS AUTHORITY:\s*$/i, "").trim();
 
-    return NextResponse.json({ post, why });
+// ✅ Clean why: إلا رجع الموديل كاتب العنوان مرة أخرى داخل why
+whyPart = whyPart.split(/WHY THIS BUILDS AUTHORITY:/i)[0].trim();
+
+// ✅ Extract POST content (إلا كان كاتب POST:)
+postPart = postPart.replace(/^POST:\s*/i, "").trim();
+
+const post = postPart;
+
+const why = whyPart
+  .split("\n")
+  .map((l) => l.replace(/^\s*-\s*/, "").trim())
+  .filter(Boolean)
+  .slice(0, 3);
+
+if (!post) {
+  return NextResponse.json({ post: text, why: [] });
+}
+
+return NextResponse.json({ post, why });
   } catch (e: any) {
   console.log("Generate error FULL:", e);
   console.log("Generate error message:", e?.message);
