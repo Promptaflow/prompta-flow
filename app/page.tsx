@@ -12,8 +12,7 @@ export default function Home() {
           </h1>
 
           <p className="mt-6 text-lg text-slate-600">
-            Built specifically for skilled freelancers who want inbound clients on LinkedIn —
-            not random engagement.
+            Generate high-authority LinkedIn posts from your freelance experience in seconds
           </p>
 
           <a
@@ -47,7 +46,7 @@ export default function Home() {
         {/* PROOF */}
         <section className="mt-24">
           <h2 className="text-2xl font-semibold text-slate-900 text-center">
-            This is what authority looks like.
+            Example generated post
           </h2>
 
           <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -98,7 +97,7 @@ your positioning needs tension.`}
             href="/app"
             className="inline-block rounded-xl bg-slate-900 px-8 py-3 text-white font-semibold hover:bg-slate-800"
           >
-            Try Prompta Flow →
+            Generate Your First Authority Post →
           </a>
         </section>
 
