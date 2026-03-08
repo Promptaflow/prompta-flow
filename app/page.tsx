@@ -1,3 +1,4 @@
+import LandingCTA from "./LandingCTA";
 export default function Home() {
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-20">
@@ -15,12 +16,7 @@ export default function Home() {
             Generate high-authority LinkedIn posts from your freelance experience in seconds
           </p>
 
-          <a
-            href="/app"
-            className="inline-block mt-10 rounded-xl bg-slate-900 px-8 py-3 text-white font-semibold hover:bg-slate-800"
-          >
-            Generate Your First LinkedIn Authority Post →
-          </a>
+          <LandingCTA />
           <p className="mt-4 text-sm text-slate-500">
             Free during early access.
           </p>
@@ -93,12 +89,7 @@ your positioning needs tension.`}
 
         {/* FINAL CTA */}
         <section className="mt-24 text-center">
-          <a
-            href="/app"
-            className="inline-block rounded-xl bg-slate-900 px-8 py-3 text-white font-semibold hover:bg-slate-800"
-          >
-            Generate Your First Authority Post →
-          </a>
+          <LandingCTA />
         </section>
 
       </div>

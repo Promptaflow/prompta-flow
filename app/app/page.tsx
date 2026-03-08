@@ -166,7 +166,12 @@ export default function Page() {
       setErrorMsg("Please enter a valid email.");
       return;
     }
-    window.va?.("event", { name: "email_submit_click" });
+    fetch("/api/track", {
+    method: "POST",
+    body: JSON.stringify({
+      event_name: "email_submit_click",
+    }),
+  });
     setEmailGateOpen(false);
     await doGenerate(clean);
   }
@@ -318,8 +323,13 @@ export default function Page() {
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
             <button
-              onClick={() => {
-              window.va?.("event", { name: "real_generate_click" });
+                onClick={() => {
+    fetch("/api/track", {
+      method: "POST",
+      body: JSON.stringify({
+        event_name: "real_generate_click",
+      }),
+    });
               onClickGenerate();
              }}
               disabled={loading}
