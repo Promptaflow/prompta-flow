@@ -166,6 +166,7 @@ export default function Page() {
       setErrorMsg("Please enter a valid email.");
       return;
     }
+    window.va?.("event", { name: "email_submit_click" });
     setEmailGateOpen(false);
     await doGenerate(clean);
   }
@@ -317,7 +318,10 @@ export default function Page() {
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
             <button
-              onClick={onClickGenerate}
+              onClick={() => {
+              window.va?.("event", { name: "real_generate_click" });
+              onClickGenerate();
+             }}
               disabled={loading}
               className="rounded-xl px-4 py-2 font-semibold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-60"
             >
