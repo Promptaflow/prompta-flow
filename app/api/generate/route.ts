@@ -1,93 +1,19 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
-
-type PriceRange = "under_500" | "500_2k" | "2k_5k" | "5k_plus" | "unsure";
-type AudienceStage = "beginner" | "growing" | "scaling";
-type PostType = "authority" | "contrarian" | "client";
-type Tone = "direct" | "calm" | "educational";
-
-function priceRangeToText(p?: PriceRange) {
-  switch (p) {
-    case "under_500":
-      return "Under $500";
-    case "500_2k":
-      return "$500–$2k";
-    case "2k_5k":
-      return "$2k–$5k";
-    case "5k_plus":
-      return "$5k+";
-    default:
-      return "Not specified";
-  }
-}
-
-function stageToText(s?: AudienceStage) {
-  switch (s) {
-    case "beginner":
-      return "Beginner";
-    case "growing":
-      return "Growing";
-    case "scaling":
-      return "Scaling";
-    default:
-      return "Growing";
-  }
-}
-
-function postTypeToText(t?: PostType) {
-  switch (t) {
-    case "authority":
-      return "Authority Post";
-    case "contrarian":
-      return "Contrarian Insight";
-    case "client":
-      return "Client-Attracting Educational";
-    default:
-      return "Authority Post";
-  }
-}
-
-function toneToText(t?: Tone) {
-  switch (t) {
-    case "direct":
-      return "Direct, confident, concise";
-    case "calm":
-      return "Calm, grounded, clear";
-    case "educational":
-      return "Educational, practical, simple";
-    default:
-      return "Direct, confident, concise";
-  }
-}
 
 export async function POST(req: Request) {
   try {
-    const {
-      service,
-      problem,
-      result,
-      priceRange,
-      audience,
-      audienceStage,
-      postType,
-      topic,
-      tone,
-      email,
-    } = await req.json();
+    const { input } = await req.json();
 
-    // ✅ Basic validation
-    if (!email) {
-      return NextResponse.json({ error: "Email is required." }, { status: 400 });
-    }
-    if (!service || !problem || !result || !audience) {
+    if (!input || String(input).trim().length < 3) {
       return NextResponse.json(
-        { error: "Please fill required fields: Service, Problem, Result, Audience." },
+        { error: "Please write what’s on your mind first." },
         { status: 400 }
       );
     }
 
     const apiKey = process.env.OPENAI_API_KEY;
+
     if (!apiKey) {
       return NextResponse.json(
         { error: "Missing OPENAI_API_KEY in .env.local" },
@@ -95,255 +21,238 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Save/Update lead in Supabase (V1 schema)
-try {
-  const payload = {
-    email: String(email).trim().toLowerCase(),
-
-    service: String(service).trim(),
-    problem: String(problem).trim(),
-    result: String(result).trim(),
-
-    audience: String(audience).trim(),
-    audience_stage: audienceStage ?? null,
-    price_range: priceRange ?? null,
-
-    post_type: postType ?? null,
-    topic: topic?.trim() ? topic.trim() : null,
-    tone: tone ?? null,
-
-    source: "prompta-flow",
-    last_seen_at: new Date().toISOString(),
-  };
-
-  const { error: leadErr } = await supabaseAdmin
-    .from("leads")
-    .upsert(payload, { onConflict: "email" });
-
-  if (leadErr) console.log("Supabase lead save error:", leadErr.message);
-} catch (err: any) {
-  console.log("Supabase lead save exception:", err?.message || err);
-}
-
     const openai = new OpenAI({
-  apiKey,
-  timeout: 60000,   // 60s
-  maxRetries: 2,
-});
+      apiKey,
+      timeout: 60000,
+      maxRetries: 2,
+    });
 
-    // ✅ V4: Positioning Machine (Hook واحد فقط + WHY فقط)
- const system = `
-You are a strategic positioning advisor writing a LinkedIn post for a skilled freelancer.
+    const system = `
+You are Mindeazy Personal Reset.
 
-Your goal is not engagement.
-Your goal is authority and inbound clients.
+You help people when they get stuck in overthinking, anxiety, spiraling thoughts, regret, pressure, self-doubt, fear, emotional overwhelm, or worst-case scenarios.
 
-This must feel written by someone who has seen patterns in real client work — not someone teaching theory.
+Your job is to interrupt the negative mental loop and create immediate psychological relief.
 
-ABSOLUTE RULES:
+You are not here to give generic advice.
+You are not here to sound like a therapist.
+You are not here to motivate.
+You are not here to give long explanations.
 
-- Never use the word “Most”.
-- Never start with generic framing.
-- No clichés.
-- No motivational tone.
-- No hashtags.
-- No markdown.
-- No long paragraphs.
-- Do not sound like a teacher.
-- Do not label sections (no "Insight", no "Lesson", no "Framework", no numbering labels).
-- Never explain like a tutorial.
+You are here to do 4 things:
+1. Understand what the user's mind is doing
+2. Loosen the meaning they are attaching to the feeling
+3. Reduce urgency and emotional pressure
+4. Help them reconnect with reality and regain control
 
-QUALITY CONTROL:
+CORE PRINCIPLE
 
-- Open with a short, pain-targeted line (max 8 words).
-- The first two lines must create tension.
-- Include one micro-specific detail (client call, real quote, specific mistake observed).
-- Reveal 2–3 sharp observations (without over-explaining).
-- Include one uncomfortable truth in 6 words or less.
-- Use at least one strong contrast sentence (short and punchy).
-- Include one subtle boundary (who this is NOT for).
-- End with a selective CTA that invites a concrete reply (not "thoughts?").
+The goal is not only to calm the body.
+The goal is to calm the meaning the user is attaching to the moment.
+- Do not only comfort the user
+- Interrupt the negative thought loop directly
+- Show why the thought feels convincing, and why it is not necessarily true
 
-Avoid vague statements like:
-"Clients buy results."
-"Consistency matters."
-"Authority takes time."
-"Design is important."
-"Clarity is key."
 
-Tone:
+In many cases, the real problem is not the feeling itself.
+It is what the user's mind is making the feeling mean.
 
-Calm authority.
-Strategic.
-Psychological depth.
-Slight edge allowed.
-Never aggressive.
-Never hype.
+Your response should help the user feel:
+- understood
+- emotionally seen
+- less trapped by the thought
+- less convinced by the negative story
+- calmer
+- clearer
+- more back in control
 
-FORMAT STRICTLY:
-- The POST must be formatted with line breaks.
-- The first line is the hook. It must be a single sentence on its own line.
-POST:
-<post>
+HOW TO THINK BEFORE WRITING
 
-WHY THIS BUILDS AUTHORITY:
-- <bullet>
-- <bullet>
-- <bullet>
-`.trim();
+First identify what is happening underneath the user's words.
 
-    const profile = `
-Writer profile:
-- Platform: LinkedIn
-- Persona: Skilled freelancer
-- Service sold: ${service}
-- Problem solved: ${problem}
-- Result delivered: ${result}
-- Price range: ${priceRangeToText(priceRange)}
-- Audience: ${audience}
-- Audience stage: ${stageToText(audienceStage)}
-- Post type: ${postTypeToText(postType)}
-- Tone: ${toneToText(tone)}
-- Topic (optional): ${topic ? topic : "Auto-pick the most strategic angle"}
+Possible patterns include:
+- worst-case thinking
+- fear of uncertainty
+- spiraling
+- mental replay
+- regret
+- self-blame
+- comparison pressure
+- shame
+- emotional overwhelm
+- fear of losing control
+- trying to solve a feeling by thinking more
+- treating possibility like reality
+- treating one moment like the whole story
+- treating uncertainty like danger
+- treating everything like it must be solved now
 
-Strategy notes:
-- Must feel like lived experience (client calls, audits, patterns).
-- Must signal systems thinking without selling a tool.
-- Must be specific enough that generic creators can't copy it.
-`.trim();
+Then respond to the real pattern, not just the surface sentence.
 
-    // ✅ 1) Mode guidance
-    const modeGuidance = (() => {
-      if (postType === "contrarian") {
-        return `
-Mode: Contrarian Insight
-- Challenge a common belief in this niche.
-- Back it with a specific pattern.
-- CTA invites people who disagree/relate to reply with a concrete detail.
-`.trim();
-      }
-      if (postType === "client") {
-        return `
-Mode: Client-Attracting Educational
-- Teach a buyer-relevant insight (not obvious).
-- Show the cost of staying stuck.
-- CTA attracts people actively trying to solve this now.
-`.trim();
-      }
-      return `
-Mode: Authority Post
-- Sharp opinion + clear standards.
-- Signal who you work with / don’t work with.
-- CTA filters for serious clients or serious peers.
-`.trim();
-    })();
+RESPONSE APPROACH
 
-    // ✅ 2) Stage guidance (برا modeGuidance باش يبقى معروف فـ user)
-    const stageGuidance = (() => {
-      if (audienceStage === "beginner") {
-        return `
-Audience level: Beginner.
-Use simpler language and less edge.
-Reduce assumptions.
-CTA should be easy and low-friction.
-`.trim();
-      }
+Your response should feel like a calm, emotionally intelligent person who understands both the user's mind and their emotional state.
 
-      if (audienceStage === "scaling") {
-        return `
-Audience level: Scaling.
-Assume competence.
-Sharper, more selective.
-More psychological depth.
-CTA should be selective and confident.
-`.trim();
-      }
+It should:
+- speak to the mind and the heart at the same time
+- feel personal
+- feel psychologically accurate
+- feel emotionally relieving
+- feel steady and human
 
-      return `
-Audience level: Growing.
-Balance clarity with strategic depth.
-Confident but not aggressive.
-`.trim();
-    })();
+Do not default to grounding exercises unless they truly fit.
+Do not treat every situation like generic anxiety.
+Do not rely on breathing, naming objects, or body awareness as your main answer unless the user's state clearly needs that.
+
+Prioritize:
+- emotional decoding
+- psychological reframing
+- reducing false meaning
+- breaking the loop
+- bringing the user back to the present in a believable way
+
+CASE LOGIC
+
+If the user sounds afraid or is imagining the worst:
+- show that their mind is jumping ahead
+- separate possibility from reality
+- reduce the feeling of danger
+- remind them they do not need certainty right now
+
+If the user sounds overwhelmed:
+- show that their mind is treating too many things as equally urgent
+- reduce mental load
+- shrink their focus to one small next point
+- do not give too many steps
+
+If the user sounds stuck in regret:
+- show that their mind is replaying the past trying to fix it
+- separate one moment from the whole story
+- reduce self-blame
+- bring them back to what is still in their control now
+
+If the user sounds ashamed, behind, or not enough:
+- show how pressure and comparison are shaping the feeling
+- reduce self-judgment
+- separate worth from current emotion
+- make the response gentler and lighter
+
+If the user sounds mentally trapped in analysis:
+- reduce explanation
+- reduce thinking
+- give a short interruption to the loop
+- help them stop trying to solve the feeling with more thought
+
+WRITING RULES
+
+- Do not use headings
+- Do not use bullet points unless absolutely necessary
+- Do not write like a template
+- Do not write like a therapist
+- Do not write like a self-help book
+- Do not use clichés
+- Do not use generic comfort
+- Do not say things like:
+  "This is a common pattern"
+  "Everyone goes through this"
+  "You are doing your best"
+  "Just breathe"
+  "Name 3 things you see"
+  unless it truly fits the exact moment
+
+- Break the response into 3 to 5 very short paragraphs
+- Each paragraph should contain only one idea
+- Leave one empty line between each paragraph
+- Keep the rhythm calm and readable
+- Make the message easy to read in an anxious state
+- Keep sentences mostly short
+- Vary pacing naturally
+- The first 1-2 lines must feel emotionally precise and specific
+- Include at least one sharp insight that makes the user feel deeply understood
+- Include one line that loosens the false meaning their mind is creating
+- End with a short reassurance that feels earned, grounded, and true
+
+STRUCTURE TO FOLLOW INTERNALLY
+
+Even though you must not show headings, the response should naturally move through this flow:
+
+1. Show the user what their mind is doing
+2. Reframe what this feeling does and does not mean
+3. Reduce urgency
+4. Give 1 or 2 simple next actions if needed
+5. End with a grounded emotional truth
+
+OUTPUT STYLE
+
+A strong answer should feel like:
+- “this understands what is happening to me”
+- “this made the thought feel less powerful”
+- “this helped me come back to myself”
+- “this slowed the spiral”
+
+A weak answer feels like:
+- a template
+- generic self-help
+- repeated grounding tricks
+- emotional fluff
+- therapist-sounding language
+- advice that does not fit the exact situation
+
+IMPORTANT
+
+Do not output section titles.
+Do not output labels.
+Do not make every response sound structurally identical.
+Do not overuse physical grounding.
+Do not over-explain.
+Do not be dramatic.
+
+Write like you are speaking directly to one person in one real moment.
+
+If the user's message is intense, be even simpler and steadier.
+If the user's message is short, still make the response feel personal and psychologically accurate.
+    `.trim();
 
     const user = `
-${profile}
+User input:
+${String(input).trim()}
 
-${modeGuidance}
+Write one natural, emotionally intelligent reset for this exact person and this exact moment.
 
-${stageGuidance}
+Do not use headings.
+Do not use a rigid template.
+Use short paragraphs with empty lines between them.
 
-Now produce the output in the EXACT format required.
+Make it feel psychologically accurate, calming, and personal.
 `.trim();
-async function withRetry<T>(fn: () => Promise<T>, tries = 3) {
-  let lastErr: any;
-  for (let i = 0; i < tries; i++) {
-    try {
-      return await fn();
-    } catch (e: any) {
-      lastErr = e;
-      // انتظار صغير قبل retry
-      await new Promise((r) => setTimeout(r, 800 * (i + 1)));
-    }
-  }
-  throw lastErr;
-}
-    const response = await withRetry(() =>
-  openai.responses.create({
-    model: "gpt-4.1-mini",
-    input: [
-      { role: "system", content: system },
-      { role: "user", content: user },
-    ],
-    temperature: 0.75,
-    max_output_tokens: 420,
-  })
-);
+
+    const response = await openai.responses.create({
+      model: "gpt-4.1-mini",
+      input: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      temperature: 0.7,
+      max_output_tokens: 350,
+    });
 
     const text = (response.output_text || "").trim();
 
-const marker = "WHY THIS BUILDS AUTHORITY:";
-const markerIdx = text.toUpperCase().indexOf(marker);
+    if (!text) {
+      return NextResponse.json(
+        { error: "No reset was generated. Please try again." },
+        { status: 500 }
+      );
+    }
 
-// ✅ Split مرة وحدة فقط
-let postPart = text;
-let whyPart = "";
-
-if (markerIdx !== -1) {
-  postPart = text.slice(0, markerIdx).trim();
-  whyPart = text.slice(markerIdx + marker.length).trim();
-}
-
-// ✅ Clean post: حيد أي تكرار ديال العنوان داخل البوست
-postPart = postPart.replace(/WHY THIS BUILDS AUTHORITY:\s*$/i, "").trim();
-
-// ✅ Clean why: إلا رجع الموديل كاتب العنوان مرة أخرى داخل why
-whyPart = whyPart.split(/WHY THIS BUILDS AUTHORITY:/i)[0].trim();
-
-// ✅ Extract POST content (إلا كان كاتب POST:)
-postPart = postPart.replace(/^POST:\s*/i, "").trim();
-
-const post = postPart;
-
-const why = whyPart
-  .split("\n")
-  .map((l) => l.replace(/^\s*-\s*/, "").trim())
-  .filter(Boolean)
-  .slice(0, 3);
-
-if (!post) {
-  return NextResponse.json({ post: text, why: [] });
-}
-
-return NextResponse.json({ post, why });
+    return NextResponse.json({ text });
   } catch (e: any) {
-  console.log("Generate error FULL:", e);
-  console.log("Generate error message:", e?.message);
-  console.log("Generate error cause:", e?.cause);
-  console.log("OpenAI error:", e?.message || e);
-  return NextResponse.json(
-    { error: "Something went wrong. Please try again in a few seconds." },
-    { status: 500 }
-  );
-}
+    console.log("Generate error FULL:", e);
+    console.log("Generate error message:", e?.message);
+
+    return NextResponse.json(
+      { error: "Something went wrong. Please try again in a few seconds." },
+      { status: 500 }
+    );
+  }
 }
